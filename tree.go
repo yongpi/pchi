@@ -12,14 +12,15 @@ type NodeType int
 
 const (
 	static   NodeType = iota // 静态链接: /hello/check_heath
-	param                    // 带参数的链接： /sku/{type}
-	regexp                   // 正则表达式的链接 /sku/{id:[0-9]+}
-	wildcard                 // 带 * 的链接 /sku/*
+	param                    // 带参数的链接： /user/{name}
+	regexp                   // 正则表达式的链接 /user/{id:[0-9]+}
+	wildcard                 // 带 * 的链接 /user/*
 )
 
 type EndPoint struct {
-	Pattern string
-	Handler http.Handler
+	Pattern    string
+	Handler    http.Handler
+	MethodType HttpMethodType
 }
 
 type nodes []*Node
@@ -40,7 +41,7 @@ type Node struct {
 	NodeType     NodeType
 	Prefix       string
 	Child        [wildcard + 1]nodes
-	EndPoints    map[HttpMethodType]EndPoint
+	EndPoints    []*EndPoint
 	ParamKey     string
 	Express      string
 	RegexpMethod *regexp2.Regexp
@@ -178,11 +179,11 @@ func (node *Node) FindHandler(context *RouterContext, pattern string, method Htt
 	if child == nil {
 		return nil
 	}
-	ep, ok := child.EndPoints[method]
-	if ok {
-		return ep.Handler
+	for _, ep := range child.EndPoints {
+		if ep.MethodType&method != 0 {
+			return ep.Handler
+		}
 	}
-
 	return nil
 }
 
@@ -289,22 +290,30 @@ func ParsePattern(pattern string) (NodeType, int, int, string, string) {
 
 func (node *Node) Clean() {
 	node.Prefix = ""
-	node.EndPoints = nil
+	node.EndPoints = node.EndPoints[:0]
 	node.Express = ""
 	node.ParamKey = ""
 	node.Child = [4]nodes{}
 }
 
 func (node *Node) AddEndPoint(method HttpMethodType, pattern string, handler http.Handler) {
-	if node.EndPoints == nil {
-		node.EndPoints = map[HttpMethodType]EndPoint{method: {Pattern: pattern, Handler: handler}}
-		return
+	for _, ep := range node.EndPoints {
+		if ep.MethodType&method != 0 {
+			panic(fmt.Sprintf("pchi: 已经存在方法 %s 对应的 handler 了，pattern = %s", HttpMethodString[method], pattern))
+		}
 	}
-	_, ok := node.EndPoints[method]
-	if ok {
-		panic(fmt.Sprintf("pchi: 已经存在方法 %s 对应的 handler 了，pattern = %s", HttpMethodString[method], pattern))
+	nep := &EndPoint{Pattern: pattern, Handler: handler, MethodType: method}
+	node.EndPoints = append(node.EndPoints, nep)
+}
+
+func (node *Node) GetEndPoint(method HttpMethodType) *EndPoint {
+	for _, ep := range node.EndPoints {
+		if ep.MethodType&method != 0 {
+			return ep
+		}
 	}
-	node.EndPoints[method] = EndPoint{Pattern: pattern, Handler: handler}
+
+	return nil
 }
 
 func patternEqLen(s1, s2 string) int {

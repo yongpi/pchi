@@ -55,8 +55,8 @@ type RouterContext struct {
 }
 
 func (context *RouterContext) Clean() {
-	context.ParamValue = nil
-	context.ParamKey = nil
+	context.ParamValue = context.ParamValue[:0]
+	context.ParamKey = context.ParamKey[:0]
 }
 
 type contextKey struct {
@@ -89,4 +89,9 @@ type HttpRouter interface {
 	http.Handler
 	RouterHandler(pattern string, methodType HttpMethodType, handler http.Handler)
 	Middleware(middleware MiddleWare)
+	Get(pattern string, handler http.Handler)
+	Post(pattern string, handler http.Handler)
+	Put(pattern string, handler http.Handler)
+	Delete(pattern string, handler http.Handler)
+	Patch(pattern string, handler http.Handler)
 }
