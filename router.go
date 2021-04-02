@@ -11,7 +11,7 @@ var _ HttpRouter = &PHttpRouter{}
 
 func NewHttpRouter() *PHttpRouter {
 	router := &PHttpRouter{
-		root: &Node{},
+		Root: &Node{},
 	}
 	router.ContextPool.New = func() interface{} {
 		return &RouterContext{}
@@ -25,6 +25,15 @@ type PHttpRouter struct {
 	Handler     http.Handler
 	MiddleWares []MiddleWare
 	Root        *Node
+}
+
+func (router *PHttpRouter) Module(pattern string, r HttpRouter) {
+	pr, ok := r.(*PHttpRouter)
+	if !ok {
+		panic(fmt.Sprintf("pchi: module htt router not *PHttpRouter"))
+	}
+	parent := router.Root.InsertRouter(pattern, Sub, nil)
+	parent.InsertNode(pr.Root)
 }
 
 func (router *PHttpRouter) Get(pattern string, handler http.Handler) {
@@ -55,7 +64,7 @@ func (router *PHttpRouter) RouterHandler(pattern string, methodType HttpMethodTy
 	if router.Handler == nil {
 		router.buildBaseHandler()
 	}
-	router.Root.InsertNode(pattern, methodType, handler)
+	router.Root.InsertRouter(pattern, methodType, handler)
 }
 
 func (router *PHttpRouter) Middleware(middleware MiddleWare) {

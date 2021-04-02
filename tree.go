@@ -47,7 +47,7 @@ type Node struct {
 	RegexpMethod *regexp2.Regexp
 }
 
-func (node *Node) InsertNode(pattern string, method HttpMethodType, handler http.Handler) *Node {
+func (node *Node) InsertRouter(pattern string, method HttpMethodType, handler http.Handler) *Node {
 	parent := node
 	search := pattern
 
@@ -136,6 +136,22 @@ func (node *Node) InsertNode(pattern string, method HttpMethodType, handler http
 
 		parent = child
 		search = search[be+1:]
+	}
+}
+
+func (node *Node) InsertNode(child *Node) {
+	if len(child.EndPoints) > 0 {
+		for _, ed := range child.EndPoints {
+			node.InsertRouter(ed.Pattern, ed.MethodType, ed.Handler)
+		}
+		return
+	}
+
+	parent := node.InsertRouter(child.Prefix, Sub, nil)
+	for _, nodes := range child.Child {
+		for _, cn := range nodes {
+			parent.InsertNode(cn)
+		}
 	}
 }
 
@@ -301,6 +317,9 @@ func (node *Node) AddEndPoint(method HttpMethodType, pattern string, handler htt
 		if ep.MethodType&method != 0 {
 			panic(fmt.Sprintf("pchi: 已经存在方法 %s 对应的 handler 了，pattern = %s", HttpMethodString[method], pattern))
 		}
+	}
+	if method == Sub {
+		return
 	}
 	nep := &EndPoint{Pattern: pattern, Handler: handler, MethodType: method}
 	node.EndPoints = append(node.EndPoints, nep)

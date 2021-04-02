@@ -17,6 +17,7 @@ const (
 	Connect
 	Options
 	Trace
+	Sub
 )
 
 var RouterContextKey = &contextKey{name: "RouterContextKey"}
@@ -45,6 +46,7 @@ var HttpMethodString = map[HttpMethodType]string{
 	Connect: http.MethodConnect,
 	Options: http.MethodOptions,
 	Trace:   http.MethodTrace,
+	Sub:     "Sub",
 }
 
 type MiddleWare func(next http.Handler) http.Handler
@@ -94,4 +96,5 @@ type HttpRouter interface {
 	Put(pattern string, handler http.Handler)
 	Delete(pattern string, handler http.Handler)
 	Patch(pattern string, handler http.Handler)
+	Module(pattern string, r HttpRouter)
 }

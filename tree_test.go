@@ -10,14 +10,14 @@ func TestRouter(t *testing.T) {
 	helloFun := func(w http.ResponseWriter, r *http.Request) {
 
 	}
-	root.InsertNode("/hello", Get, http.HandlerFunc(helloFun))
-	root.InsertNode("/ha", Get, http.HandlerFunc(helloFun))
-	root.InsertNode("/c", Get, http.HandlerFunc(helloFun))
-	root.InsertNode("/c/{name}", Get, http.HandlerFunc(helloFun))
-	root.InsertNode("/hell/{id:[1-9]+}", Get, http.HandlerFunc(helloFun))
-	root.InsertNode("/{name}/1111/hello/{aaa}", Get, http.HandlerFunc(helloFun))
-	root.InsertNode("/{name}/2222", Get, http.HandlerFunc(helloFun))
-	root.InsertNode("/darwin/{name}/{id:[1-9]+}/aaa", Get, http.HandlerFunc(helloFun))
+	root.InsertRouter("/hello", Get, http.HandlerFunc(helloFun))
+	root.InsertRouter("/ha", Get, http.HandlerFunc(helloFun))
+	root.InsertRouter("/c", Get, http.HandlerFunc(helloFun))
+	root.InsertRouter("/c/{name}", Get, http.HandlerFunc(helloFun))
+	root.InsertRouter("/hell/{id:[1-9]+}", Get, http.HandlerFunc(helloFun))
+	root.InsertRouter("/{name}/1111/hello/{aaa}", Get, http.HandlerFunc(helloFun))
+	root.InsertRouter("/{name}/2222", Get, http.HandlerFunc(helloFun))
+	root.InsertRouter("/darwin/{name}/{id:[1-9]+}/aaa", Get, http.HandlerFunc(helloFun))
 
 	urlCheck := map[string]RouterContext{
 		"/hello":                {},
