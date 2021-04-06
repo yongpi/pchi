@@ -48,6 +48,9 @@ type Node struct {
 }
 
 func (node *Node) InsertRouter(pattern string, method HttpMethodType, handler http.Handler) *Node {
+	if pattern != "/" && pattern[len(pattern)-1] == '/' {
+		pattern = pattern[:len(pattern)-1]
+	}
 	parent := node
 	search := pattern
 
@@ -139,18 +142,15 @@ func (node *Node) InsertRouter(pattern string, method HttpMethodType, handler ht
 	}
 }
 
-func (node *Node) InsertNode(child *Node) {
+func (node *Node) InsertNode(rootPattern string, child *Node, middleWares []MiddleWare) {
 	if len(child.EndPoints) > 0 {
 		for _, ed := range child.EndPoints {
-			node.InsertRouter(ed.Pattern, ed.MethodType, ed.Handler)
+			node.InsertRouter(rootPattern+ed.Pattern, ed.MethodType, linkHandler(middleWares, ed.Handler))
 		}
-		return
 	}
-
-	parent := node.InsertRouter(child.Prefix, Sub, nil)
 	for _, nodes := range child.Child {
 		for _, cn := range nodes {
-			parent.InsertNode(cn)
+			node.InsertNode(rootPattern, cn, middleWares)
 		}
 	}
 }

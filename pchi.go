@@ -51,6 +51,11 @@ var HttpMethodString = map[HttpMethodType]string{
 
 type MiddleWare func(next http.Handler) http.Handler
 
+type HttpFilter struct {
+	MiddleWare
+	Routers []string
+}
+
 type RouterContext struct {
 	ParamKey   []string
 	ParamValue []string
@@ -96,5 +101,6 @@ type HttpRouter interface {
 	Put(pattern string, handler http.Handler)
 	Delete(pattern string, handler http.Handler)
 	Patch(pattern string, handler http.Handler)
-	Module(pattern string, r HttpRouter)
+	Module(pattern string, fn func(r HttpRouter))
+	Filter(filter HttpFilter)
 }
