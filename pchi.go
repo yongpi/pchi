@@ -49,14 +49,22 @@ var HttpMethodString = map[HttpMethodType]string{
 
 type MiddleWare func(next http.Handler) http.Handler
 
+// 过滤器
+type HttpFilter struct {
+	MiddleWare
+	// 需要过滤的 router 列表, url 后面跟 method,可以组合 method，当 method 为 all 时，支持所有 method
+	// 例如：[]string{"/a/s/{sku_id}:get", "/c/n:post&get", "/b/c:all"}
+	Routers []string
+}
+
 type RouterContext struct {
 	ParamKey   []string
 	ParamValue []string
 }
 
 func (context *RouterContext) Clean() {
-	context.ParamValue = nil
-	context.ParamKey = nil
+	context.ParamValue = context.ParamValue[:0]
+	context.ParamKey = context.ParamKey[:0]
 }
 
 type contextKey struct {
@@ -89,4 +97,11 @@ type HttpRouter interface {
 	http.Handler
 	RouterHandler(pattern string, methodType HttpMethodType, handler http.Handler)
 	Middleware(middleware MiddleWare)
+	Get(pattern string, handler http.Handler)
+	Post(pattern string, handler http.Handler)
+	Put(pattern string, handler http.Handler)
+	Delete(pattern string, handler http.Handler)
+	Patch(pattern string, handler http.Handler)
+	Module(pattern string, fn func(r HttpRouter))
+	Filter(filter HttpFilter)
 }
