@@ -48,9 +48,10 @@ type Node struct {
 }
 
 func (node *Node) InsertRouter(pattern string, method HttpMethodType, handler http.Handler) *Node {
-	if pattern != "/" && pattern[len(pattern)-1] == '/' {
-		pattern = pattern[:len(pattern)-1]
+	if pattern == "" {
+		panic(fmt.Sprintf("pchi: pattern 不能为空"))
 	}
+	pattern = formatPattern(pattern)
 	parent := node
 	search := pattern
 
@@ -318,9 +319,6 @@ func (node *Node) AddEndPoint(method HttpMethodType, pattern string, handler htt
 			panic(fmt.Sprintf("pchi: 已经存在方法 %s 对应的 handler 了，pattern = %s", HttpMethodString[method], pattern))
 		}
 	}
-	if method == Sub {
-		return
-	}
 	nep := &EndPoint{Pattern: pattern, Handler: handler, MethodType: method}
 	node.EndPoints = append(node.EndPoints, nep)
 }
@@ -345,4 +343,27 @@ func patternEqLen(s1, s2 string) int {
 		}
 	}
 	return len(s1)
+}
+
+func formatPattern(pattern string) string {
+	var bi int
+	for i := 1; i < len(pattern); i++ {
+		if pattern[i] != '/' {
+			break
+		}
+		bi = i
+
+	}
+	pattern = pattern[bi:]
+	ei := len(pattern)
+	if ei == 1 {
+		return pattern
+	}
+	for i := len(pattern) - 1; i >= 0; i-- {
+		if pattern[i] != '/' {
+			break
+		}
+		ei = i
+	}
+	return pattern[:ei]
 }

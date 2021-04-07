@@ -17,7 +17,6 @@ const (
 	Connect
 	Options
 	Trace
-	Sub
 )
 
 var RouterContextKey = &contextKey{name: "RouterContextKey"}
@@ -46,13 +45,15 @@ var HttpMethodString = map[HttpMethodType]string{
 	Connect: http.MethodConnect,
 	Options: http.MethodOptions,
 	Trace:   http.MethodTrace,
-	Sub:     "Sub",
 }
 
 type MiddleWare func(next http.Handler) http.Handler
 
+// 过滤器
 type HttpFilter struct {
 	MiddleWare
+	// 需要过滤的 router 列表, url 后面跟 method,可以组合 method，当 method 为 all 时，支持所有 method
+	// 例如：[]string{"/a/s/{sku_id}:get", "/c/n:post&get", "/b/c:all"}
 	Routers []string
 }
 

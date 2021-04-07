@@ -42,15 +42,26 @@ func (router *PHttpRouter) Filter(filter HttpFilter) {
 	for _, routerPattern := range filter.Routers {
 		sp := strings.Split(routerPattern, ":")
 		method := strings.ToUpper(sp[len(sp)-1])
-		httpMethod, ok := HttpMethodMap[strings.ToUpper(method)]
-		if !ok {
-			panic(fmt.Sprintf("pchi: filter routers 中含有的 method 非法，pattern = %s, routers = %v", routerPattern, filter.Routers))
+		var httpMethod HttpMethodType
+		if method == "ALL" {
+			httpMethod = AllMethod
+		} else {
+			methods := strings.Split(method, "&")
+			for _, strMethod := range methods {
+				hm, ok := HttpMethodMap[strings.ToUpper(strMethod)]
+				if !ok {
+					panic(fmt.Sprintf("pchi: filter routers 中含有的 method 非法，pattern = %s, routers = %v", routerPattern, filter.Routers))
+				}
+				httpMethod |= hm
+			}
 		}
+
 		pattern := routerPattern[:len(routerPattern)-len(method)-1]
 		router.filters[pattern] = append(router.filters[pattern], HandlerFilter{HttpFilter: filter, Method: httpMethod})
 	}
 }
 
+// 适用于子集 urls ，子集中如果有 middleware 则只有子集里的 Handler 会使用
 func (router *PHttpRouter) Module(pattern string, fn func(r HttpRouter)) {
 	r := NewHttpRouter()
 	fn(r)
